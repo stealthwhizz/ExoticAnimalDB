@@ -464,4 +464,3 @@ COMMIT;
 -- INSERT INTO Animals(animalname, speciesid, facilityid, gender, acquisitiondate, acquisitionmethod, healthstatus, weightkg, microchipid, isactive)
 -- VALUES ('TestCap', 1, 1, 'Male', CURDATE(), 'Transferred', 'Good', 100.00, 'MCTEST', TRUE); -- expect error
 -- UPDATE Facilities SET capacity = 500 WHERE facilityid=1;
-
