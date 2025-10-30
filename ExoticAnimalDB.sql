@@ -218,7 +218,7 @@ DETERMINISTIC
 BEGIN
   DECLARE bdate DATE;
   DECLARE yrs INT;
-  SELECT birthdate INTO bdate FROM Animals WHERE animalid = p_animal_id;
+  SELECT birth_date INTO bdate FROM Animals WHERE animal_id = p_animal_id;
   IF bdate IS NULL THEN
     SET yrs = 0;
   ELSE
@@ -234,7 +234,7 @@ BEGIN
   DECLARE total DECIMAL(12,2);
   SELECT IFNULL(SUM(cost), 0) INTO total
   FROM MedicalRecords
-  WHERE animalid = p_animal_id;
+  WHERE animal_id = p_animal_id;
   RETURN total;
 END//
 
@@ -246,10 +246,10 @@ BEGIN
   DECLARE base INT DEFAULT 0;
   DECLARE recent_emergencies INT DEFAULT 0;
 
-  SELECT s.conservationstatus INTO status
+  SELECT s.conservation_status INTO status
   FROM Animals a
-  JOIN Species s ON a.speciesid = s.speciesid
-  WHERE a.animalid = p_animal_id;
+  JOIN Species s ON a.species_id = s.species_id
+  WHERE a.animal_id = p_animal_id;
 
   IF status IN ('Critically Endangered') THEN SET base = 5;
   ELSEIF status IN ('Endangered') THEN SET base = 4;
@@ -260,9 +260,9 @@ BEGIN
 
   SELECT COUNT(*) INTO recent_emergencies
   FROM MedicalRecords
-  WHERE animalid = p_animal_id
-    AND recordtype IN ('Emergency','Surgery')
-    AND visitdate >= DATE_SUB(CURDATE(), INTERVAL 180 DAY);
+  WHERE animal_id = p_animal_id
+    AND record_type IN ('Emergency','Surgery')
+    AND visit_date >= DATE_SUB(CURDATE(), INTERVAL 180 DAY);
 
   RETURN base + LEAST(recent_emergencies, 3);
 END//
@@ -289,23 +289,23 @@ CREATE PROCEDURE addAnimal(
 BEGIN
   DECLARE cap INT; DECLARE current_count INT;
 
-  IF (SELECT COUNT(*) FROM Species WHERE speciesid = p_speciesid) = 0 THEN
+  IF (SELECT COUNT(*) FROM Species WHERE species_id = p_speciesid) = 0 THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid speciesid';
   END IF;
 
-  IF (SELECT COUNT(*) FROM Facilities WHERE facilityid = p_facilityid) = 0 THEN
+  IF (SELECT COUNT(*) FROM Facilities WHERE facility_id = p_facilityid) = 0 THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid facilityid';
   END IF;
 
-  SELECT capacity INTO cap FROM Facilities WHERE facilityid = p_facilityid;
-  SELECT COUNT(*) INTO current_count FROM Animals WHERE facilityid = p_facilityid AND isactive = TRUE;
+  SELECT capacity INTO cap FROM Facilities WHERE facility_id = p_facilityid;
+  SELECT COUNT(*) INTO current_count FROM Animals WHERE facility_id = p_facilityid AND is_active = TRUE;
   IF current_count >= cap THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Facility capacity exceeded';
   END IF;
 
   INSERT INTO Animals(
-    animalname, speciesid, facilityid, gender, birthdate, acquisitiondate,
-    acquisitionmethod, healthstatus, weightkg, microchipid, isactive
+    animal_name, species_id, facility_id, gender, birth_date, acquisition_date,
+    acquisition_method, health_status, weight_kg, microchip_id, is_active
   ) VALUES (
     p_animalname, p_speciesid, p_facilityid, p_gender, p_birthdate, p_acquisitiondate,
     p_acquisitionmethod, p_healthstatus, p_weightkg, p_microchipid, TRUE
@@ -318,18 +318,18 @@ CREATE PROCEDURE assignPrimaryKeeper(
   IN p_notes TEXT
 )
 BEGIN
-  IF (SELECT COUNT(*) FROM Animals WHERE animalid = p_animal_id AND isactive=TRUE) = 0 THEN
+  IF (SELECT COUNT(*) FROM Animals WHERE animal_id = p_animal_id AND is_active=TRUE) = 0 THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid or inactive animal';
   END IF;
-  IF (SELECT COUNT(*) FROM Keepers WHERE keeperid = p_keeper_id) = 0 THEN
+  IF (SELECT COUNT(*) FROM Keepers WHERE keeper_id = p_keeper_id) = 0 THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid keeper';
   END IF;
 
   UPDATE AnimalCare
-  SET iscurrent = FALSE
-  WHERE animalid = p_animal_id AND iscurrent = TRUE;
+  SET is_current = FALSE
+  WHERE animal_id = p_animal_id AND is_current = TRUE;
 
-  INSERT INTO AnimalCare(animalid, keeperid, assignmentdate, caretype, notes, iscurrent)
+  INSERT INTO AnimalCare(animal_id, keeper_id, assignment_date, care_type, notes, is_current)
   VALUES (p_animal_id, p_keeper_id, CURDATE(), 'Primary', p_notes, TRUE);
 END//
 
@@ -344,7 +344,7 @@ CREATE PROCEDURE recordMedicalVisit(
   IN p_veterinarianname VARCHAR(100)
 )
 BEGIN
-  IF (SELECT COUNT(*) FROM Animals WHERE animalid=p_animal_id) = 0 THEN
+  IF (SELECT COUNT(*) FROM Animals WHERE animal_id=p_animal_id) = 0 THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid animal';
   END IF;
   IF p_cost < 0 THEN
@@ -352,15 +352,15 @@ BEGIN
   END IF;
 
   INSERT INTO MedicalRecords(
-    animalid, visitdate, veterinarianname, diagnosis, treatment, medications,
-    followupdate, recordtype, cost
+    animal_id, visit_date, veterinarian_name, diagnosis, treatment, medications,
+    follow_up_date, record_type, cost
   ) VALUES (
     p_animal_id, CURDATE(), p_veterinarianname, p_diagnosis, p_treatment, p_medications,
     p_followupdate, p_recordtype, p_cost
   );
 
   IF p_recordtype IN ('Emergency','Surgery') THEN
-    UPDATE Animals SET healthstatus = 'Poor' WHERE animalid = p_animal_id AND healthstatus IN ('Good','Fair','Excellent');
+    UPDATE Animals SET health_status = 'Poor' WHERE animal_id = p_animal_id AND health_status IN ('Good','Fair','Excellent');
   END IF;
 END//
 
@@ -376,7 +376,7 @@ CREATE TRIGGER trg_animals_weight_check
 BEFORE INSERT ON Animals
 FOR EACH ROW
 BEGIN
-  IF NEW.weightkg IS NOT NULL AND (NEW.weightkg < 0.001 OR NEW.weightkg > 10000) THEN
+  IF NEW.weight_kg IS NOT NULL AND (NEW.weight_kg < 0.001 OR NEW.weight_kg > 10000) THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Weight out of allowed bounds';
   END IF;
 END//
@@ -385,7 +385,7 @@ CREATE TRIGGER trg_animals_weight_check_upd
 BEFORE UPDATE ON Animals
 FOR EACH ROW
 BEGIN
-  IF NEW.weightkg IS NOT NULL AND (NEW.weightkg < 0.001 OR NEW.weightkg > 10000) THEN
+  IF NEW.weight_kg IS NOT NULL AND (NEW.weight_kg < 0.001 OR NEW.weight_kg > 10000) THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Weight out of allowed bounds';
   END IF;
 END//
@@ -396,8 +396,8 @@ BEFORE INSERT ON Animals
 FOR EACH ROW
 BEGIN
   DECLARE cap INT; DECLARE cnt INT;
-  SELECT capacity INTO cap FROM Facilities WHERE facilityid = NEW.facilityid;
-  SELECT COUNT(*) INTO cnt FROM Animals WHERE facilityid = NEW.facilityid AND isactive = TRUE;
+  SELECT capacity INTO cap FROM Facilities WHERE facility_id = NEW.facility_id;
+  SELECT COUNT(*) INTO cnt FROM Animals WHERE facility_id = NEW.facility_id AND is_active = TRUE;
   IF cnt >= cap THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Facility capacity exceeded (trigger)';
   END IF;
@@ -408,10 +408,10 @@ CREATE TRIGGER trg_animalcare_primary_uniqueness
 BEFORE INSERT ON AnimalCare
 FOR EACH ROW
 BEGIN
-  IF NEW.iscurrent = TRUE AND NEW.caretype = 'Primary' THEN
+  IF NEW.is_current = TRUE AND NEW.care_type = 'Primary' THEN
     IF EXISTS (
       SELECT 1 FROM AnimalCare
-      WHERE animalid = NEW.animalid AND iscurrent = TRUE AND caretype = 'Primary'
+      WHERE animal_id = NEW.animal_id AND is_current = TRUE AND care_type = 'Primary'
     ) THEN
       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Primary current keeper already exists for this animal';
     END IF;
@@ -422,10 +422,10 @@ CREATE TRIGGER trg_animalcare_primary_uniqueness_upd
 BEFORE UPDATE ON AnimalCare
 FOR EACH ROW
 BEGIN
-  IF NEW.iscurrent = TRUE AND NEW.caretype = 'Primary' THEN
+  IF NEW.is_current = TRUE AND NEW.care_type = 'Primary' THEN
     IF EXISTS (
       SELECT 1 FROM AnimalCare
-      WHERE animalid = NEW.animalid AND iscurrent = TRUE AND caretype = 'Primary' AND careid <> NEW.careid
+      WHERE animal_id = NEW.animal_id AND is_current = TRUE AND care_type = 'Primary' AND care_id <> NEW.care_id
     ) THEN
       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Primary current keeper already exists for this animal';
     END IF;
@@ -437,31 +437,44 @@ DELIMITER ;
 
 COMMIT;
 
--- DEMO CALLS (uncomment to test locally)
--- SELECT animalname, getAnimalAgeYears(animalid) AS age_years,
---        totalMedicalCost(animalid) AS total_cost,
---        healthRiskScore(animalid) AS risk
--- FROM Animals
--- ORDER BY risk DESC;
+-- ==========================
+-- DEMO CALLS
+-- ==========================
 
--- CALL addAnimal('Khan', 1, 1, 'Male', '2022-01-01', CURDATE(), 'Transferred', 'Good', 210.00, 'MC999');
--- SELECT * FROM Animals WHERE microchipid='MC999';
+-- Test Functions: Get animal age, total medical costs, and health risk scores
+SELECT animal_name, getAnimalAgeYears(animal_id) AS age_years,
+       totalMedicalCost(animal_id) AS total_cost,
+       healthRiskScore(animal_id) AS risk
+FROM Animals
+ORDER BY risk DESC;
 
--- CALL assignPrimaryKeeper(1, 1, 'Reassigned for medical monitoring');
--- SELECT * FROM AnimalCare WHERE animalid=1 ORDER BY assignmentdate DESC;
+-- Test Procedure: Add a new animal
+CALL addAnimal('Khan', 1, 1, 'Male', '2022-01-01', CURDATE(), 'Transferred', 'Good', 210.00, 'MC999');
+SELECT * FROM Animals WHERE microchip_id='MC999';
 
--- CALL recordMedicalVisit(1, 'Emergency', 3200.00, 'Dehydration', 'Fluids', 'ORS', DATE_ADD(CURDATE(), INTERVAL 7 DAY), 'Dr. N Rao');
--- SELECT * FROM MedicalRecords WHERE animalid=1 ORDER BY visitdate DESC;
--- SELECT animalname, healthstatus FROM Animals WHERE animalid=1;
+-- Test Procedure: Assign a primary keeper
+CALL assignPrimaryKeeper(1, 1, 'Reassigned for medical monitoring');
+SELECT * FROM AnimalCare WHERE animal_id=1 ORDER BY assignment_date DESC;
 
--- -- Trigger error demos:
--- UPDATE Animals SET weightkg = -5 WHERE animalid=1; -- expect error
--- INSERT INTO AnimalCare(animalid, keeperid, assignmentdate, caretype, notes, iscurrent)
--- VALUES (1, 2, CURDATE(), 'Primary', 'Conflict test', TRUE); -- expect error
+-- Test Procedure: Record a medical visit
+CALL recordMedicalVisit(1, 'Emergency', 3200.00, 'Dehydration', 'Fluids', 'ORS', DATE_ADD(CURDATE(), INTERVAL 7 DAY), 'Dr. N Rao');
+SELECT * FROM MedicalRecords WHERE animal_id=1 ORDER BY visit_date DESC;
+SELECT animal_name, health_status FROM Animals WHERE animal_id=1;
 
--- -- Capacity trigger demo (restore capacity afterwards)
--- UPDATE Facilities SET capacity = 1 WHERE facilityid=1;
--- INSERT INTO Animals(animalname, speciesid, facilityid, gender, acquisitiondate, acquisitionmethod, healthstatus, weightkg, microchipid, isactive)
--- VALUES ('TestCap', 1, 1, 'Male', CURDATE(), 'Transferred', 'Good', 100.00, 'MCTEST', TRUE); -- expect error
--- UPDATE Facilities SET capacity = 500 WHERE facilityid=1;
+-- ==========================
+-- TRIGGER ERROR DEMOS
+-- ==========================
+
+-- Test weight validation trigger (should fail)
+-- UPDATE Animals SET weight_kg = -5 WHERE animal_id=1;
+
+-- Test primary keeper uniqueness trigger (should fail)
+-- INSERT INTO AnimalCare(animal_id, keeper_id, assignment_date, care_type, notes, is_current)
+-- VALUES (1, 2, CURDATE(), 'Primary', 'Conflict test', TRUE);
+
+-- Test capacity trigger (should fail after reducing capacity)
+-- UPDATE Facilities SET capacity = 1 WHERE facility_id=1;
+-- INSERT INTO Animals(animal_name, species_id, facility_id, gender, acquisition_date, acquisition_method, health_status, weight_kg, microchip_id, is_active)
+-- VALUES ('TestCap', 1, 1, 'Male', CURDATE(), 'Transferred', 'Good', 100.00, 'MCTEST', TRUE);
+-- UPDATE Facilities SET capacity = 500 WHERE facility_id=1;
 
