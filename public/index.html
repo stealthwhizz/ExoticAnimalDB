@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exotic Animal Database Management System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🦁 Exotic Animal Database</h1>
+            <p class="subtitle">Wildlife Management System</p>
+        </header>
+
+        <!-- Dashboard Statistics -->
+        <section id="dashboard" class="section">
+            <h2>Dashboard</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-animals">-</div>
+                    <div class="stat-label">Total Animals</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-species">-</div>
+                    <div class="stat-label">Species</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-facilities">-</div>
+                    <div class="stat-label">Facilities</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-keepers">-</div>
+                    <div class="stat-label">Keepers</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-number" id="animals-attention">-</div>
+                    <div class="stat-label">Need Attention</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tab-button active" onclick="showTab('animals')">Animals</button>
+            <button class="tab-button" onclick="showTab('species')">Species</button>
+            <button class="tab-button" onclick="showTab('facilities')">Facilities</button>
+            <button class="tab-button" onclick="showTab('keepers')">Keepers</button>
+            <button class="tab-button" onclick="showTab('medical')">Medical Records</button>
+            <button class="tab-button" onclick="showTab('breeding')">Breeding</button>
+        </nav>
+
+        <!-- Animals Tab -->
+        <section id="animals-tab" class="tab-content active">
+            <div class="section-header">
+                <h2>Animals</h2>
+                <button class="btn btn-primary" onclick="showAddAnimalForm()">+ Add Animal</button>
+            </div>
+            
+            <!-- Add Animal Form -->
+            <div id="add-animal-form" class="form-container" style="display: none;">
+                <h3>Add New Animal</h3>
+                <form id="animal-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="animal_name">Animal Name *</label>
+                            <input type="text" id="animal_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="species_id">Species *</label>
+                            <select id="species_id" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="facility_id">Facility *</label>
+                            <select id="facility_id" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender *</label>
+                            <select id="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="birth_date">Birth Date</label>
+                            <input type="date" id="birth_date">
+                        </div>
+                        <div class="form-group">
+                            <label for="acquisition_date">Acquisition Date *</label>
+                            <input type="date" id="acquisition_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="acquisition_method">Acquisition Method *</label>
+                            <select id="acquisition_method" required>
+                                <option value="">Select Method</option>
+                                <option value="Born in facility">Born in facility</option>
+                                <option value="Purchased">Purchased</option>
+                                <option value="Rescued">Rescued</option>
+                                <option value="Transferred">Transferred</option>
+                                <option value="Donated">Donated</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="health_status">Health Status *</label>
+                            <select id="health_status" required>
+                                <option value="Excellent">Excellent</option>
+                                <option value="Good">Good</option>
+                                <option value="Fair">Fair</option>
+                                <option value="Poor">Poor</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="weight_kg">Weight (kg) *</label>
+                            <input type="number" step="0.01" id="weight_kg" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="microchip_id">Microchip ID *</label>
+                            <input type="text" id="microchip_id" required>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save Animal</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideAddAnimalForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Animals Table -->
+            <div class="table-container">
+                <table id="animals-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Species</th>
+                            <th>Facility</th>
+                            <th>Gender</th>
+                            <th>Health Status</th>
+                            <th>Weight (kg)</th>
+                            <th>Microchip ID</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="animals-tbody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Species Tab -->
+        <section id="species-tab" class="tab-content">
+            <div class="section-header">
+                <h2>Species</h2>
+                <button class="btn btn-primary" onclick="showAddSpeciesForm()">+ Add Species</button>
+            </div>
+            
+            <!-- Add Species Form -->
+            <div id="add-species-form" class="form-container" style="display: none;">
+                <h3>Add New Species</h3>
+                <form id="species-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="species_name">Common Name *</label>
+                            <input type="text" id="species_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="scientific_name">Scientific Name *</label>
+                            <input type="text" id="scientific_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="conservation_status">Conservation Status *</label>
+                            <select id="conservation_status" required>
+                                <option value="">Select Status</option>
+                                <option value="Least Concern">Least Concern</option>
+                                <option value="Near Threatened">Near Threatened</option>
+                                <option value="Vulnerable">Vulnerable</option>
+                                <option value="Endangered">Endangered</option>
+                                <option value="Critically Endangered">Critically Endangered</option>
+                                <option value="Extinct">Extinct</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="habitat_type">Habitat Type *</label>
+                            <input type="text" id="habitat_type" required placeholder="e.g., Tropical Forest">
+                        </div>
+                        <div class="form-group">
+                            <label for="diet_type">Diet Type *</label>
+                            <select id="diet_type" required>
+                                <option value="">Select Diet</option>
+                                <option value="Carnivore">Carnivore</option>
+                                <option value="Herbivore">Herbivore</option>
+                                <option value="Omnivore">Omnivore</option>
+                                <option value="Insectivore">Insectivore</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="average_lifespan">Average Lifespan (years) *</label>
+                            <input type="number" id="average_lifespan" min="1" max="200" required>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save Species</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideAddSpeciesForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table id="species-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Common Name</th>
+                            <th>Scientific Name</th>
+                            <th>Conservation Status</th>
+                            <th>Habitat Type</th>
+                            <th>Diet Type</th>
+                            <th>Avg Lifespan (years)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="species-tbody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Facilities Tab -->
+        <section id="facilities-tab" class="tab-content">
+            <div class="section-header">
+                <h2>Facilities</h2>
+                <button class="btn btn-primary" onclick="showAddFacilityForm()">+ Add Facility</button>
+            </div>
+            
+            <!-- Add Facility Form -->
+            <div id="add-facility-form" class="form-container" style="display: none;">
+                <h3>Add New Facility</h3>
+                <form id="facility-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="facility_name">Facility Name *</label>
+                            <input type="text" id="facility_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location *</label>
+                            <input type="text" id="location" required placeholder="e.g., City, State">
+                        </div>
+                        <div class="form-group">
+                            <label for="facility_type">Facility Type *</label>
+                            <select id="facility_type" required>
+                                <option value="">Select Type</option>
+                                <option value="Zoo">Zoo</option>
+                                <option value="Wildlife Sanctuary">Wildlife Sanctuary</option>
+                                <option value="Aquarium">Aquarium</option>
+                                <option value="Research Center">Research Center</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="established_year">Established Year *</label>
+                            <input type="number" id="established_year" min="1800" max="2025" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="capacity">Capacity *</label>
+                            <input type="number" id="capacity" min="1" max="10000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="license_number">License Number *</label>
+                            <input type="text" id="license_number" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact_email">Contact Email</label>
+                            <input type="email" id="contact_email">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone_number">Phone Number</label>
+                            <input type="tel" id="phone_number">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save Facility</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideAddFacilityForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table id="facilities-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Facility Name</th>
+                            <th>Location</th>
+                            <th>Type</th>
+                            <th>Established</th>
+                            <th>Capacity</th>
+                            <th>License Number</th>
+                            <th>Contact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="facilities-tbody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Keepers Tab -->
+        <section id="keepers-tab" class="tab-content">
+            <div class="section-header">
+                <h2>Animal Keepers</h2>
+                <button class="btn btn-primary" onclick="showAddKeeperForm()">+ Add Keeper</button>
+            </div>
+            
+            <!-- Add Keeper Form -->
+            <div id="add-keeper-form" class="form-container" style="display: none;">
+                <h3>Add New Keeper</h3>
+                <form id="keeper-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="first_name">First Name *</label>
+                            <input type="text" id="first_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="last_name">Last Name *</label>
+                            <input type="text" id="last_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="employee_id">Employee ID *</label>
+                            <input type="text" id="employee_id" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="specialization">Specialization</label>
+                            <input type="text" id="specialization" placeholder="e.g., Big Cats, Reptiles">
+                        </div>
+                        <div class="form-group">
+                            <label for="experience_years">Experience (years) *</label>
+                            <input type="number" id="experience_years" min="0" max="50" value="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="certification_level">Certification Level *</label>
+                            <select id="certification_level" required>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                                <option value="Expert">Expert</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="keeper_facility_id">Facility *</label>
+                            <select id="keeper_facility_id" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="hire_date">Hire Date *</label>
+                            <input type="date" id="hire_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="salary">Salary *</label>
+                            <input type="number" id="salary" min="20000" max="200000" step="1000" required>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save Keeper</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideAddKeeperForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table id="keepers-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Employee ID</th>
+                            <th>Specialization</th>
+                            <th>Experience (years)</th>
+                            <th>Certification</th>
+                            <th>Facility</th>
+                            <th>Hire Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keepers-tbody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Medical Records Tab -->
+        <section id="medical-tab" class="tab-content">
+            <div class="section-header">
+                <h2>Medical Records</h2>
+                <button class="btn btn-primary" onclick="showAddMedicalForm()">+ Add Medical Record</button>
+            </div>
+
+            <!-- Add Medical Record Form -->
+            <div id="add-medical-form" class="form-container" style="display: none;">
+                <h3>Add New Medical Record</h3>
+                <form id="medical-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="medical_animal_id">Animal *</label>
+                            <select id="medical_animal_id" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="veterinarian_name">Veterinarian Name *</label>
+                            <input type="text" id="veterinarian_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="record_type">Record Type *</label>
+                            <select id="record_type" required>
+                                <option value="">Select Type</option>
+                                <option value="Routine Checkup">Routine Checkup</option>
+                                <option value="Emergency">Emergency</option>
+                                <option value="Surgery">Surgery</option>
+                                <option value="Vaccination">Vaccination</option>
+                                <option value="Injury">Injury</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cost">Cost ($) *</label>
+                            <input type="number" step="0.01" id="cost" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="diagnosis">Diagnosis *</label>
+                            <textarea id="diagnosis" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="treatment">Treatment *</label>
+                            <textarea id="treatment" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="medications">Medications</label>
+                            <input type="text" id="medications">
+                        </div>
+                        <div class="form-group">
+                            <label for="follow_up_date">Follow-up Date</label>
+                            <input type="date" id="follow_up_date">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save Record</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideAddMedicalForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <div id="medical-records-container">
+                    <p class="info-message">Select an animal from the Animals tab to view medical records</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Breeding Tab -->
+        <section id="breeding-tab" class="tab-content">
+            <div class="section-header">
+                <h2>Breeding Records</h2>
+            </div>
+            <div class="table-container">
+                <table id="breeding-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Mother</th>
+                            <th>Father</th>
+                            <th>Species</th>
+                            <th>Mating Date</th>
+                            <th>Expected Birth</th>
+                            <th>Actual Birth</th>
+                            <th>Offspring</th>
+                            <th>Success</th>
+                        </tr>
+                    </thead>
+                    <tbody id="breeding-tbody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Modal for Animal Details -->
+        <div id="animal-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeAnimalModal()">&times;</span>
+                <h2 id="modal-animal-name"></h2>
+                <div id="modal-animal-details"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
